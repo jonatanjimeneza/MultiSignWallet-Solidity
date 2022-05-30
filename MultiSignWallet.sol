@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.13;
 
+
 contract MultiSignWallet {
     //Direccioens de los validadores
     address [] public approvers;
@@ -30,24 +31,32 @@ contract MultiSignWallet {
 
     //Funcion de crear las transferencias
     function createTransfer(uint amount, address payable to)external onlyApprover() {
+        //Creamos nuestra transferencia.
         transfers[nextId] = Transfer(nextId,amount,to,0,false);
+        //Incrementamos los ids.
         nextId++;
     }
 
     //Funcion de enviar dinero
-    function sendTransfer(uint id)external onlyApprover(){
+    function sendTransfer(uint id)external payable onlyApprover(){
         //Creamos un require para ver que la transaccion no ha sido ya enviada
         require(transfers[id].sent ==false, 'La transaccion se ha enviado');
         //Si no hay aprobaciones, incrementarlas y cambiar a estado true.
         if(approvals[msg.sender][id]==false){
+        //Cambiamos el estado de las aprobaciones a true    
         approvals[msg.sender][id]=true;
+        //Incrementamos los approvals.
         transfers[id].approvals++;
         }
         //Si las aprovaciones ya son iguales al quorum o superiores enviar la transferencia.
         if(transfers[id].approvals >= quorum){
+            //Cambiamos el booleano del sent a true 
             transfers[id].sent = true;
+            //Definimos direccion para enviar transferencia
             address payable to = transfers[id].to;
+            //Definimos la cantidad de dinero
             uint amount = transfers[id].amount;
+            //Enviamos la cantidad de la  transferencia.
             to.transfer(amount);
             return;
         }
